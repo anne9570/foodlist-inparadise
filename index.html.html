@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>美食探索地圖</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --card: #f8f8f6;
+    --card2: #eeeeec;
+    --gold: #b8975a;
+    --gold2: #d4b070;
+    --red: #e05555;
+    --green: #2e8b72;
+    --text: #1a2420;
+    --muted: #4a6260;
+    --tag-hot: #f0e8d0;
+    --tag-hot-bg: #14413a;
+    --border: #c8d4d0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 32px;
+  }
+
+  /* HEADER */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #14413a 0%, #1a5248 50%, #14413a 100%);
+    border-bottom: 2px solid #b8975a;
+    padding: 20px 16px 16px;
+    text-align: center;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 4px;
+    text-shadow: 0 0 24px rgba(255,180,80,0.4);
+  }
+  .header-sub {
+    font-size: 11px;
+    color: #f0ece4;
+    margin-top: 4px;
+    letter-spacing: 2px;
+  }
+
+  /* RESTAURANT NAV ROW */
+  .restaurant-nav {
+    background: #0f2e29;
+    padding: 8px 12px;
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 1px solid #1e4a42;
+  }
+  .restaurant-nav::-webkit-scrollbar { display: none; }
+  .nav-chip {
+    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans TC', sans-serif;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #3a6a60;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-chip:active { background: #1e4a42; }
+  .nav-chip.visited {
+    background: #1a3d35;
+    border-color: #2e8b72;
+    color: #6dd4b8;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .progress-label span:last-child { color: #d4b070; font-weight: 700; }
+  .progress-track {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* CARDS */
+  .cards {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .card.visited {
+    border-color: var(--green);
+    background: #e8f4f0;
+  }
+
+
+  /* Card Header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 14px 10px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .restaurant-name {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 1px;
+    flex: 1;
+    line-height: 1.2;
+  }
+  .card.visited .restaurant-name { color: var(--green); }
+
+  .badge-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .badge-hot {
+    background: var(--tag-hot-bg);
+    color: var(--tag-hot);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px solid var(--tag-hot);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .badge-closed {
+    background: #2a1a1a;
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px solid var(--red);
+    letter-spacing: 1px;
+  }
+
+  /* Checkmark */
+  .check-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    color: transparent;
+    font-size: 16px;
+  }
+  .check-btn:active { transform: scale(0.88); }
+  .card.visited .check-btn {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  /* Style tag */
+  .style-tag {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 14px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-weight: 500;
+  }
+  .style-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+
+  /* Divider */
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 14px;
+  }
+
+  /* Items */
+  .items-list {
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: transparent;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .item-row:active { background: var(--card2); }
+  .item-row.item-checked {
+    background: #e0f0ea;
+    border-color: rgba(46,139,114,0.35);
+  }
+
+
+  .item-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #aaa090;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 13px;
+    color: transparent;
+    transition: all 0.2s ease;
+  }
+  .item-row.item-checked .item-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  .item-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+    font-weight: 500;
+  }
+  .item-row.item-checked .item-text {
+    text-decoration: line-through;
+    color: #7a9e98;
+  }
+  .item-unavail-badge {
+    font-size: 11px;
+    background: #2a1a1a;
+    color: var(--red);
+    border: 1.5px solid var(--red);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  /* Note text */
+  .item-note {
+    font-size: 12px;
+    color: #8a9e80;
+    display: block;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  /* Reset button */
+  .reset-area {
+    padding: 8px 12px 0;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .reset-btn {
+    background: #f8f8f6;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .reset-btn:active { opacity: 0.7; }
+
+  /* Visited stamp */
+  .visited-stamp {
+    display: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .card.visited .visited-stamp { display: inline; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 24px 16px 8px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sticky-top">
+  <div class="header">
+    <div class="header-title">🍽 饗饗解鎖清單</div>
+    <div class="header-sub">點選餐區篩選、解鎖打勾</div>
+  </div>
+  <div class="restaurant-nav" id="restaurant-nav"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>探索進度</span>
+      <span id="progress-text">0 / 0 道已品嚐</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+</div>
+
+<div class="reset-area">
+  <button class="reset-btn" onclick="resetAll()">✕ 全部重置</button>
+</div>
+
+<div class="cards" id="cards-container"></div>
+
+<div class="footer">長按餐廳標題可標記「已去過」</div>
+
+<script>
+const data = [
+  {
+    name: "豐大海",
+    hot: true,
+    closed: false,
+    style: "海鮮、現切生魚片與握壽司",
+    items: [
+      { text: "炙燒握握壽司，尤其比目魚（入口即化）" },
+      { text: "生魚片鮭魚肚、青甘" },
+      { text: "旭蟹、三點蟹、白蝦" },
+      { text: "雪蟹腳", unavailable: true },
+      { text: "炸北海道佐呂間牡蠣", note: "下午茶可能不供應" },
+    ]
+  },
+  {
+    name: "旬巧原",
+    hot: false,
+    closed: true,
+    style: "法式冷盤、開胃前菜、沙拉",
+    items: [
+      { text: "帕瑪火腿哈密瓜（經典鹹甜風味）" },
+      { text: "松露風味前菜、鵝肝醬慕斯小點" },
+    ]
+  },
+  {
+    name: "大快地",
+    hot: true,
+    closed: false,
+    style: "西式鐵板料理、直火排餐",
+    items: [
+      { text: "煎干貝佐明太子醬" },
+      { text: "帶骨牛小排佐紅酒醬（有嚼勁）／爐烤肋眼牛排（油花豐富歡欣多汁）" },
+      { text: "蕈蝦" },
+      { text: "螺旋酥皮濃湯" },
+    ]
+  },
+  {
+    name: "禾享田",
+    hot: false,
+    closed: false,
+    style: "燉湯、現煮料理",
+    items: [
+      { text: "現沖牛肉湯（湯頭鮮美，肉質滑嫩）" },
+      { text: "鮑魚海鮮粥（整顆鮑魚）" },
+    ]
+  },
+  {
+    name: "炙丘",
+    hot: false,
+    closed: false,
+    style: "日式烤物、炸物與串燒",
+    items: [
+      { text: "烤牛舌（Q彈帶炭香）" },
+      { text: "炸蝦天婦羅" },
+      { text: "鹽烤香魚" },
+    ]
+  },
+  {
+    name: "京山",
+    hot: false,
+    closed: true,
+    style: "中式經典手路菜、港式點心",
+    items: [
+      { text: "片皮烤鴨炙餅（鴨皮油潤酥脆）" },
+      { text: "蟹黃燒賣、炒蒸海鮮", unavailable: true },
+    ]
+  },
+  {
+    name: "甜田",
+    hot: false,
+    closed: false,
+    style: "西式精品甜點、蛋糕與冰淇淋",
+    items: [
+      { text: "雲朵舒芙蕾（代表），隱藏吃法：搭配蜂巢蜂蜜、冰淇淋及水果組合成甜點盤" },
+      { text: "現烤熔岩巧克力蛋糕（搭配燒燒）" },
+      { text: "蜂巢冰淇淋、法式馬卡龍" },
+    ]
+  },
+  {
+    name: "長飲川",
+    hot: true,
+    closed: false,
+    style: "現調飲品、咖啡、鮮榨果汁與調酒",
+    items: [
+      { text: "現調雞尾酒 3-4 款" },
+      { text: "港式絲襪奶茶" },
+    ]
+  },
+];
+
+let state = {};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('food_checklist_v2');
+    if (saved) state = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('food_checklist_v2', JSON.stringify(state));
+  } catch(e) {}
+}
+
+function toggleItem(rid, iid) {
+  if (!state[rid]) state[rid] = { visited: false, items: {} };
+  state[rid].items[iid] = !state[rid].items[iid];
+  saveState();
+  renderAll();
+}
+
+function toggleVisited(rid) {
+  if (!state[rid]) state[rid] = { visited: false, items: {} };
+  state[rid].visited = !state[rid].visited;
+  saveState();
+  renderAll();
+}
+
+function resetAll() {
+  if (confirm('確定要清除所有打勾記錄？')) {
+    state = {};
+    saveState();
+    renderAll();
+  }
+}
+
+function renderAll() {
+  const container = document.getElementById('cards-container');
+  container.innerHTML = '';
+
+  let totalItems = 0, checkedItems = 0;
+
+  data.forEach((r, ri) => {
+    const rstate = state[ri] || { visited: false, items: {} };
+    const isVisited = rstate.visited;
+    const isClosed = r.closed;
+
+    const card = document.createElement('div');
+    card.className = 'card' + (isVisited ? ' visited' : '') + (isClosed ? ' closed' : '');
+    card.id = 'card-' + ri;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'card-header';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'restaurant-name';
+    nameEl.textContent = r.name;
+
+    const badgeWrap = document.createElement('div');
+    badgeWrap.className = 'badge-wrap';
+
+    if (r.hot) {
+      const hotBadge = document.createElement('span');
+      hotBadge.className = 'badge-hot';
+      hotBadge.textContent = '🔥 熱門';
+      badgeWrap.appendChild(hotBadge);
+    }
+
+
+    const checkBtn = document.createElement('div');
+    checkBtn.className = 'check-btn';
+    checkBtn.textContent = '✓';
+    checkBtn.title = '標記已去過';
+    checkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleVisited(ri);
+    });
+
+    const stamp = document.createElement('span');
+    stamp.className = 'visited-stamp';
+    stamp.textContent = '✓ 已去過';
+    nameEl.appendChild(stamp);
+
+    header.appendChild(nameEl);
+    header.appendChild(badgeWrap);
+    header.appendChild(checkBtn);
+
+    // Style
+    const styleTag = document.createElement('div');
+    styleTag.className = 'style-tag';
+    const dot = document.createElement('span');
+    dot.className = 'style-dot';
+    styleTag.appendChild(dot);
+    styleTag.appendChild(document.createTextNode(r.style));
+
+    // Divider
+    const divider = document.createElement('div');
+    divider.className = 'card-divider';
+
+    // Items
+    const itemsList = document.createElement('div');
+    itemsList.className = 'items-list';
+
+    r.items.forEach((item, ii) => {
+      totalItems++;
+      const isChecked = rstate.items[ii] || false;
+      if (isChecked) checkedItems++;
+
+      const row = document.createElement('div');
+      row.className = 'item-row' + (isChecked ? ' item-checked' : '') + (item.unavailable ? ' item-unavailable' : '');
+
+      const itemCheck = document.createElement('div');
+      itemCheck.className = 'item-check';
+      itemCheck.textContent = '✓';
+
+      const itemContent = document.createElement('div');
+      itemContent.className = 'item-text';
+      itemContent.textContent = item.text;
+
+      if (item.note) {
+        const noteEl = document.createElement('span');
+        noteEl.className = 'item-note';
+        noteEl.textContent = '⚠ ' + item.note;
+        itemContent.appendChild(noteEl);
+      }
+
+      row.appendChild(itemCheck);
+      row.appendChild(itemContent);
+
+
+
+      row.addEventListener('click', () => toggleItem(ri, ii));
+      itemsList.appendChild(row);
+    });
+
+    card.appendChild(header);
+    card.appendChild(styleTag);
+    card.appendChild(divider);
+    card.appendChild(itemsList);
+    container.appendChild(card);
+  });
+
+  // Update progress
+  const pct = totalItems > 0 ? (checkedItems / totalItems * 100) : 0;
+  document.getElementById('progress-text').textContent = `${checkedItems} / ${totalItems} 道已品嚐`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Render nav chips
+  const nav = document.getElementById('restaurant-nav');
+  nav.innerHTML = '';
+  data.forEach((r, ri) => {
+    const rstate = state[ri] || { visited: false, items: {} };
+    const chip = document.createElement('button');
+    chip.className = 'nav-chip' + (rstate.visited ? ' visited' : '');
+    chip.textContent = r.name;
+    chip.addEventListener('click', () => {
+      const target = document.getElementById('card-' + ri);
+      if (target) {
+        const stickyH = document.querySelector('.sticky-top').offsetHeight;
+        const top = target.getBoundingClientRect().top + window.scrollY - stickyH - 10;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+    nav.appendChild(chip);
+  });
+}
+
+loadState();
+renderAll();
+</script>
+</body>
+</html>
