@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>寶鼻饗饗吃起來</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --card: #f8f8f6;
+    --card2: #eeeeec;
+    --gold: #b8975a;
+    --gold2: #d4b070;
+    --red: #e05555;
+    --green: #2e8b72;
+    --text: #1a2420;
+    --muted: #4a6260;
+    --tag-hot: #f0e8d0;
+    --tag-hot-bg: #14413a;
+    --border: #c8d4d0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 32px;
+  }
+
+  /* HEADER */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #14413a 0%, #1a5248 50%, #14413a 100%);
+    border-bottom: 2px solid #b8975a;
+    padding: 20px 16px 16px;
+    text-align: center;
+  }
+  .header-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 4px;
+    text-shadow: 0 0 24px rgba(255,180,80,0.4);
+  }
+  .header-sub {
+    font-size: 11px;
+    color: #f0ece4;
+    margin-top: 4px;
+    letter-spacing: 2px;
+  }
+
+  /* RESTAURANT NAV ROW */
+  .restaurant-nav {
+    background: #0f2e29;
+    padding: 8px 12px;
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 1px solid #1e4a42;
+  }
+  .restaurant-nav::-webkit-scrollbar { display: none; }
+  .nav-chip {
+    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans TC', sans-serif;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #3a6a60;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-chip:active { background: #1e4a42; }
+  .nav-chip.visited {
+    background: #1a3d35;
+    border-color: #2e8b72;
+    color: #6dd4b8;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .progress-label span:last-child { color: #d4b070; font-weight: 700; }
+  .progress-track {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* CARDS */
+  .cards {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .card.visited {
+    border-color: var(--green);
+    background: #e8f4f0;
+  }
+
+
+  /* Card Header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 14px 10px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .restaurant-name {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 1px;
+    flex: 1;
+    line-height: 1.2;
+  }
+  .card.visited .restaurant-name { color: var(--green); }
+
+  .badge-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .badge-hot {
+    background: var(--tag-hot-bg);
+    color: var(--tag-hot);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px solid var(--tag-hot);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .badge-closed {
+    background: #2a1a1a;
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1.5px solid var(--red);
+    letter-spacing: 1px;
+  }
+
+  /* Checkmark */
+  .check-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    color: transparent;
+    font-size: 16px;
+  }
+  .check-btn:active { transform: scale(0.88); }
+  .card.visited .check-btn {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  /* Style tag */
+  .style-tag {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 14px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-weight: 500;
+  }
+  .style-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+
+  /* Divider */
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 14px;
+  }
+
+  /* Items */
+  .items-list {
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: transparent;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .item-row:active { background: var(--card2); }
+  .item-row.item-checked {
+    background: #e0f0ea;
+    border-color: rgba(46,139,114,0.35);
+  }
+
+
+  .item-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #aaa090;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 13px;
+    color: transparent;
+    transition: all 0.2s ease;
+  }
+  .item-row.item-checked .item-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  .item-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+    font-weight: 500;
+  }
+  .item-row.item-checked .item-text {
+    text-decoration: line-through;
+    color: #7a9e98;
+  }
+  .item-unavail-badge {
+    font-size: 11px;
+    background: #2a1a1a;
+    color: var(--red);
+    border: 1.5px solid var(--red);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  /* Note text */
+  .item-note {
+    font-size: 12px;
+    color: #8a9e80;
+    display: block;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  /* Reset button */
+  .reset-area {
+    padding: 8px 12px 0;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .reset-btn {
+    background: #f8f8f6;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .reset-btn:active { opacity: 0.7; }
+
+  /* Visited stamp */
+  .visited-stamp {
+    display: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .card.visited .visited-stamp { display: inline; }
+
+
+  /* TAB BAR */
+  .tab-bar {
+    background: #f0f4f3;
+    border-top: 1px solid #c8d4d0;
+    padding: 8px 12px;
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    align-items: center;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #c8d4d0;
+    background: #ffffff;
+    color: #4a6260;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tab-btn.active {
+    background: #14413a;
+    border-color: #14413a;
+    color: #ffffff;
+  }
+  .tab-del {
+    font-size: 14px;
+    color: #a0b0ae;
+    margin-left: 2px;
+    line-height: 1;
+  }
+  .tab-del:hover { color: #e05555; }
+
+  .tab-add {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px dashed #b8975a;
+    background: transparent;
+    color: #b8975a;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab-add:active { background: #fdf6ec; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px 18px;
+    width: 80vw;
+    max-width: 320px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a2420;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .modal-input {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1.5px solid #c8d4d0;
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+    color: #1a2420;
+    margin-bottom: 14px;
+  }
+  .modal-input:focus { border-color: #14413a; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-cancel {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1.5px solid #c8d4d0;
+    background: transparent;
+    color: #4a6260;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .modal-confirm {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: none;
+    background: #14413a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 24px 16px 8px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sticky-top">
+  <div class="header">
+    <div class="header-title">🍽 饗饗解鎖清單</div>
+    <div class="header-sub">點選餐區篩選、解鎖打勾</div>
+  </div>
+  <div class="restaurant-nav" id="restaurant-nav"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>探索進度</span>
+      <span id="progress-text">0 / 0 道已品嚐</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <div class="tab-bar" id="tab-bar"></div>
+</div>
+
+<div class="reset-area">
+  <button class="reset-btn" onclick="resetCurrentTab()">✕ 本輪重置</button>
+</div>
+
+<div class="cards" id="cards-container"></div>
+
+<div class="footer">點選餐廳右側圓圈可標記「已去過」</div>
+
+<script>
+const data = [
+  {
+    name: "豐大海",
+    hot: true,
+    closed: false,
+    style: "海鮮、現切生魚片與握壽司",
+    items: [
+      { text: "炙燒握握壽司，尤其比目魚（入口即化）" },
+      { text: "生魚片鮭魚肚、青甘" },
+      { text: "旭蟹、三點蟹、白蝦" },
+      { text: "雪蟹腳", unavailable: true },
+      { text: "炸北海道佐呂間牡蠣", note: "下午茶可能不供應" },
+    ]
+  },
+  {
+    name: "旬巧原",
+    hot: false,
+    closed: true,
+    style: "法式冷盤、開胃前菜、沙拉",
+    items: [
+      { text: "帕瑪火腿哈密瓜（經典鹹甜風味）" },
+      { text: "松露風味前菜、鵝肝醬慕斯小點" },
+    ]
+  },
+  {
+    name: "大快地",
+    hot: true,
+    closed: false,
+    style: "西式鐵板料理、直火排餐",
+    items: [
+      { text: "煎干貝佐明太子醬" },
+      { text: "帶骨牛小排佐紅酒醬（有嚼勁）／爐烤肋眼牛排（油花豐富歡欣多汁）" },
+      { text: "蕈蝦" },
+      { text: "螺旋酥皮濃湯" },
+    ]
+  },
+  {
+    name: "禾享田",
+    hot: false,
+    closed: false,
+    style: "燉湯、現煮料理",
+    items: [
+      { text: "現沖牛肉湯（湯頭鮮美，肉質滑嫩）" },
+      { text: "鮑魚海鮮粥（整顆鮑魚）" },
+    ]
+  },
+  {
+    name: "炙丘",
+    hot: false,
+    closed: false,
+    style: "日式烤物、炸物與串燒",
+    items: [
+      { text: "烤牛舌（Q彈帶炭香）" },
+      { text: "炸蝦天婦羅" },
+      { text: "鹽烤香魚" },
+    ]
+  },
+  {
+    name: "京山",
+    hot: false,
+    closed: true,
+    style: "中式經典手路菜、港式點心",
+    items: [
+      { text: "片皮烤鴨炙餅（鴨皮油潤酥脆）" },
+      { text: "蟹黃燒賣、炒蒸海鮮", unavailable: true },
+    ]
+  },
+  {
+    name: "甜田",
+    hot: false,
+    closed: false,
+    style: "西式精品甜點、蛋糕與冰淇淋",
+    items: [
+      { text: "雲朵舒芙蕾（代表），隱藏吃法：搭配蜂巢蜂蜜、冰淇淋及水果組合成甜點盤" },
+      { text: "現烤熔岩巧克力蛋糕（搭配燒燒）" },
+      { text: "蜂巢冰淇淋、法式馬卡龍" },
+    ]
+  },
+  {
+    name: "長飲川",
+    hot: true,
+    closed: false,
+    style: "現調飲品、咖啡、鮮榨果汁與調酒",
+    items: [
+      { text: "現調雞尾酒 3-4 款" },
+      { text: "港式絲襪奶茶" },
+    ]
+  },
+];
+
+// state structure: { tabs: [{name, restaurantState}], activeTab: 0 }
+let appState = { tabs: [{ name: '第一輪', restaurantState: {} }], activeTab: 0 };
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('food_checklist_v3');
+    if (saved) appState = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('food_checklist_v3', JSON.stringify(appState));
+  } catch(e) {}
+}
+
+function currentTabState() {
+  return appState.tabs[appState.activeTab].restaurantState;
+}
+
+function toggleItem(rid, iid) {
+  const ts = currentTabState();
+  if (!ts[rid]) ts[rid] = { visited: false, items: {} };
+  ts[rid].items[iid] = !ts[rid].items[iid];
+  saveState();
+  renderAll();
+}
+
+function toggleVisited(rid) {
+  const ts = currentTabState();
+  if (!ts[rid]) ts[rid] = { visited: false, items: {} };
+  ts[rid].visited = !ts[rid].visited;
+  saveState();
+  renderAll();
+}
+
+function resetCurrentTab() {
+  if (confirm(`確定要清除「${appState.tabs[appState.activeTab].name}」的所有記錄？`)) {
+    appState.tabs[appState.activeTab].restaurantState = {};
+    saveState();
+    renderAll();
+  }
+}
+
+function showModal(title, defaultVal, onConfirm) {
+  const overlay = document.getElementById('modal-overlay');
+  const input = document.getElementById('modal-input');
+  const titleEl = document.getElementById('modal-title');
+  titleEl.textContent = title;
+  input.value = defaultVal;
+  overlay.classList.add('open');
+  setTimeout(() => input.focus(), 100);
+  const confirm = document.getElementById('modal-confirm');
+  const cancel = document.getElementById('modal-cancel');
+  const cleanup = () => { overlay.classList.remove('open'); confirm.onclick = null; cancel.onclick = null; overlay.onclick = null; };
+  confirm.onclick = () => { const v = input.value.trim(); if (v) onConfirm(v); cleanup(); };
+  cancel.onclick = cleanup;
+  overlay.onclick = (e) => { if (e.target === overlay) cleanup(); };
+  input.onkeydown = (e) => { if (e.key === 'Enter') confirm.onclick(); if (e.key === 'Escape') cleanup(); };
+}
+
+function addTab() {
+  const num = appState.tabs.length + 1;
+  const def = `第${['一','二','三','四','五','六','七','八','九','十'][num-1] || num}輪`;
+  showModal('新增輪次', def, (name) => {
+    appState.tabs.push({ name, restaurantState: {} });
+    appState.activeTab = appState.tabs.length - 1;
+    saveState();
+    renderAll();
+  });
+}
+
+function switchTab(idx) {
+  appState.activeTab = idx;
+  saveState();
+  renderAll();
+}
+
+function deleteTab(idx) {
+  if (appState.tabs.length === 1) { alert('至少保留一個輪次'); return; }
+  if (!confirm(`刪除「${appState.tabs[idx].name}」？`)) return;
+  appState.tabs.splice(idx, 1);
+  if (appState.activeTab >= appState.tabs.length) appState.activeTab = appState.tabs.length - 1;
+  saveState();
+  renderAll();
+}
+
+function renameTab(idx) {
+  showModal('修改輪次名稱', appState.tabs[idx].name, (name) => {
+    appState.tabs[idx].name = name;
+    saveState();
+    renderAll();
+  });
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  appState.tabs.forEach((tab, idx) => {
+    const isActive = idx === appState.activeTab;
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (isActive ? ' active' : '');
+    btn.textContent = tab.name;
+    btn.addEventListener('click', () => switchTab(idx));
+    btn.addEventListener('dblclick', (e) => { e.stopPropagation(); renameTab(idx); });
+    if (!isActive) {
+      const del = document.createElement('span');
+      del.className = 'tab-del';
+      del.textContent = '×';
+      del.addEventListener('click', (e) => { e.stopPropagation(); deleteTab(idx); });
+      btn.appendChild(del);
+    }
+    bar.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tab-add';
+  addBtn.textContent = '＋ 新增輪次';
+  addBtn.addEventListener('click', addTab);
+  bar.appendChild(addBtn);
+}
+
+function renderAll() {
+  const ts = currentTabState();
+  const container = document.getElementById('cards-container');
+  container.innerHTML = '';
+  let totalItems = 0, checkedItems = 0;
+
+  data.forEach((r, ri) => {
+    const rstate = ts[ri] || { visited: false, items: {} };
+    const isVisited = rstate.visited;
+    const isClosed = r.closed;
+
+    const card = document.createElement('div');
+    card.className = 'card' + (isVisited ? ' visited' : '') + (isClosed ? ' closed' : '');
+    card.id = 'card-' + ri;
+
+    const header = document.createElement('div');
+    header.className = 'card-header';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'restaurant-name';
+    nameEl.textContent = r.name;
+
+    const badgeWrap = document.createElement('div');
+    badgeWrap.className = 'badge-wrap';
+
+    if (r.hot) {
+      const hotBadge = document.createElement('span');
+      hotBadge.className = 'badge-hot';
+      hotBadge.textContent = '🔥 熱門';
+      badgeWrap.appendChild(hotBadge);
+    }
+
+    const checkBtn = document.createElement('div');
+    checkBtn.className = 'check-btn';
+    checkBtn.textContent = '✓';
+    checkBtn.title = '標記已去過';
+    checkBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleVisited(ri); });
+
+    const stamp = document.createElement('span');
+    stamp.className = 'visited-stamp';
+    stamp.textContent = '✓ 已去過';
+    nameEl.appendChild(stamp);
+
+    header.appendChild(nameEl);
+    header.appendChild(badgeWrap);
+    header.appendChild(checkBtn);
+
+    const styleTag = document.createElement('div');
+    styleTag.className = 'style-tag';
+    const dot = document.createElement('span');
+    dot.className = 'style-dot';
+    styleTag.appendChild(dot);
+    styleTag.appendChild(document.createTextNode(r.style));
+
+    const divider = document.createElement('div');
+    divider.className = 'card-divider';
+
+    const itemsList = document.createElement('div');
+    itemsList.className = 'items-list';
+
+    r.items.forEach((item, ii) => {
+      totalItems++;
+      const isChecked = rstate.items[ii] || false;
+      if (isChecked) checkedItems++;
+
+      const row = document.createElement('div');
+      row.className = 'item-row' + (isChecked ? ' item-checked' : '');
+
+      const itemCheck = document.createElement('div');
+      itemCheck.className = 'item-check';
+      itemCheck.textContent = '✓';
+
+      const itemContent = document.createElement('div');
+      itemContent.className = 'item-text';
+      itemContent.textContent = item.text;
+
+      if (item.note) {
+        const noteEl = document.createElement('span');
+        noteEl.className = 'item-note';
+        noteEl.textContent = '⚠ ' + item.note;
+        itemContent.appendChild(noteEl);
+      }
+
+      row.appendChild(itemCheck);
+      row.appendChild(itemContent);
+      row.addEventListener('click', () => toggleItem(ri, ii));
+      itemsList.appendChild(row);
+    });
+
+    card.appendChild(header);
+    card.appendChild(styleTag);
+    card.appendChild(divider);
+    card.appendChild(itemsList);
+    container.appendChild(card);
+  });
+
+  const pct = totalItems > 0 ? (checkedItems / totalItems * 100) : 0;
+  document.getElementById('progress-text').textContent = `${checkedItems} / ${totalItems} 道已品嚐`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const nav = document.getElementById('restaurant-nav');
+  nav.innerHTML = '';
+  data.forEach((r, ri) => {
+    const rstate = ts[ri] || { visited: false, items: {} };
+    const chip = document.createElement('button');
+    chip.className = 'nav-chip' + (rstate.visited ? ' visited' : '');
+    chip.textContent = r.name;
+    chip.addEventListener('click', () => {
+      const target = document.getElementById('card-' + ri);
+      if (target) {
+        const stickyH = document.querySelector('.sticky-top').offsetHeight;
+        const top = target.getBoundingClientRect().top + window.scrollY - stickyH - 10;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+    nav.appendChild(chip);
+  });
+
+  renderTabs();
+}
+
+loadState();
+renderAll();
+</script>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">新增輪次</div>
+    <input class="modal-input" id="modal-input" type="text" maxlength="20" />
+    <div class="modal-actions">
+      <button class="modal-cancel" id="modal-cancel">取消</button>
+      <button class="modal-confirm" id="modal-confirm">確認</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
